@@ -1,0 +1,142 @@
+[
+  {
+    "name": "quota-first: the allowance renewing soonest goes first",
+    "strategy": "quota-first",
+    "options": {},
+    "seats": [
+      { "key": "a", "known": true, "used": 10, "soon": [300] },
+      { "key": "b", "known": true, "used": 10, "soon": [100] },
+      { "key": "c", "known": true, "used": 10, "soon": [200] }
+    ],
+    "expect": ["b", "c", "a"]
+  },
+  {
+    "name": "quota-first: a seat past the ceiling waits for the others",
+    "strategy": "quota-first",
+    "options": {},
+    "seats": [
+      { "key": "a", "known": true, "used": 90, "soon": [100] },
+      { "key": "b", "known": true, "used": 20, "soon": [500] }
+    ],
+    "expect": ["b", "a"]
+  },
+  {
+    "name": "quota-first: a seat at the ceiling exactly is past it",
+    "strategy": "quota-first",
+    "options": { "ceiling": 80 },
+    "seats": [
+      { "key": "a", "known": true, "used": 80, "soon": [100] },
+      { "key": "b", "known": true, "used": 79, "soon": [500] }
+    ],
+    "expect": ["b", "a"]
+  },
+  {
+    "name": "quota-first: ceiling is an option",
+    "strategy": "quota-first",
+    "options": { "ceiling": 50 },
+    "seats": [
+      { "key": "a", "known": true, "used": 60, "soon": [100] },
+      { "key": "b", "known": true, "used": 40, "soon": [500] }
+    ],
+    "expect": ["b", "a"]
+  },
+  {
+    "name": "quota-first: a resting seat goes last",
+    "strategy": "quota-first",
+    "options": {},
+    "seats": [
+      { "key": "a", "known": true, "used": 10, "soon": [100], "resting": true },
+      { "key": "b", "known": true, "used": 50, "soon": [500] }
+    ],
+    "expect": ["b", "a"]
+  },
+  {
+    "name": "quota-first: a seat whose renewal is unknown sorts after one known",
+    "strategy": "quota-first",
+    "options": {},
+    "seats": [
+      { "key": "a", "known": false, "used": 0, "soon": [] },
+      { "key": "b", "known": true, "used": 10, "soon": [100] }
+    ],
+    "expect": ["b", "a"]
+  },
+  {
+    "name": "quota-first: an allowance not known counts as below the ceiling",
+    "strategy": "quota-first",
+    "options": {},
+    "seats": [
+      { "key": "a", "known": false, "used": 0, "soon": [900] },
+      { "key": "b", "known": true, "used": 99, "soon": [100] }
+    ],
+    "expect": ["a", "b"]
+  },
+  {
+    "name": "quota-first: past every ceiling, the one renewing soonest still goes first",
+    "strategy": "quota-first",
+    "options": {},
+    "seats": [
+      { "key": "a", "known": true, "used": 95, "soon": [300] },
+      { "key": "b", "known": true, "used": 90, "soon": [100] }
+    ],
+    "expect": ["b", "a"]
+  },
+  {
+    "name": "token-spread: the seat used least lately goes first",
+    "strategy": "token-spread",
+    "options": {},
+    "seats": [
+      { "key": "a", "known": true, "used": 10, "tokens": 500 },
+      { "key": "b", "known": true, "used": 10, "tokens": 100 },
+      { "key": "c", "known": true, "used": 10, "tokens": 300 }
+    ],
+    "expect": ["b", "c", "a"]
+  },
+  {
+    "name": "token-spread: resting and past the ceiling go last",
+    "strategy": "token-spread",
+    "options": {},
+    "seats": [
+      { "key": "a", "known": true, "used": 10, "tokens": 10, "resting": true },
+      { "key": "b", "known": true, "used": 95, "tokens": 900 },
+      { "key": "c", "known": true, "used": 10, "tokens": 500 }
+    ],
+    "expect": ["c", "b", "a"]
+  },
+  {
+    "name": "token-spread: an allowance not known is never past the ceiling",
+    "strategy": "token-spread",
+    "options": {},
+    "seats": [
+      { "key": "a", "known": false, "used": 0, "tokens": 50 },
+      { "key": "b", "known": true, "used": 99, "tokens": 10 }
+    ],
+    "expect": ["a", "b"]
+  },
+  {
+    "name": "token-spread: a seat never sent anything goes first",
+    "strategy": "token-spread",
+    "options": {},
+    "seats": [
+      { "key": "a", "known": true, "used": 10 },
+      { "key": "b", "known": true, "used": 10, "tokens": 40 }
+    ],
+    "expect": ["a", "b"]
+  },
+  {
+    "name": "a single seat is left where it is, whatever the options say",
+    "strategy": "quota-first",
+    "options": { "ceiling": 1 },
+    "seats": [{ "key": "only", "known": true, "used": 100, "soon": [100] }],
+    "expect": ["only"]
+  },
+  {
+    "name": "options that are not an object still give a usable order",
+    "strategy": "quota-first",
+    "options": "ceiling=80",
+    "seats": [
+      { "key": "a", "known": true, "used": 10, "soon": [200] },
+      { "key": "b", "known": true, "used": 10, "soon": [100] }
+    ],
+    "expect": ["b", "a"]
+  }
+]

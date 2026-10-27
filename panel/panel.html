@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>积分限额</title>
+<script src="_magpie/bridge.js"></script>
+<script src="panel.js" defer></script>
+<style>
+  body { margin: 0; padding: 12px 14px 20px;
+    font: 13px/1.6 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    color: var(--magpie-fg, #2f2f2c); background: transparent; }
+  .sub { color: var(--magpie-fg-2, #6b6f63); font-size: 12px; margin: 0 0 6px; }
+  .card { border: 1px solid var(--magpie-fg-6, #e4e2da); border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 10px; background: transparent; }
+  .card.on { border-color: var(--magpie-accent, #427061); }
+  .head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .name { font-weight: 600; font-size: 14px; }
+  .ids { font-size: 11px; color: var(--magpie-fg-2, #6b6f63);
+    font-family: ui-monospace, Consolas, monospace; }
+  .grow { flex: 1 1 auto; min-width: 0; }
+  .badge { font-size: 11px; padding: 0 8px; border-radius: 999px;
+    background: var(--magpie-fg-6, #e4e2da); color: var(--magpie-fg-2, #6b6f63);
+    white-space: nowrap; }
+  .badge.ok { background: rgba(66, 112, 97, .15); color: #427061; }
+  /* 换算率来源标记：实测 / 无来源（占位） */
+  .src { font-size: 10px; padding: 0 6px; border-radius: 4px; white-space: nowrap;
+    background: var(--magpie-fg-6, #e4e2da); color: var(--magpie-fg-2, #6b6f63);
+    cursor: help; }
+  .src.ok { background: rgba(66, 112, 97, .14); color: #427061; }
+  .nums { display: flex; gap: 18px; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
+  .nums .k { color: var(--magpie-fg-2, #6b6f63); font-size: 11px; }
+  .nums .v { font-size: 15px; }
+  .editrow { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-top: 8px; }
+  label { display: flex; flex-direction: column; gap: 2px; font-size: 11px;
+    color: var(--magpie-fg-2, #6b6f63); min-width: 0; }
+  /* 数字输入框：位数多一些也不截断（额度动辄四五位） */
+  input[type=number] { width: 128px; padding: 4px 7px; border: 1px solid var(--magpie-fg-6, #c9c7c0);
+    border-radius: 6px; font: inherit; background: var(--magpie-bg, #fff);
+    color: var(--magpie-fg, #2f2f2c); box-sizing: border-box; }
+  input { padding: 4px 7px; border: 1px solid var(--magpie-fg-6, #c9c7c0);
+    border-radius: 6px; font: inherit; background: var(--magpie-bg, #fff);
+    color: var(--magpie-fg, #2f2f2c); box-sizing: border-box; }
+  button { padding: 4px 12px; border-radius: 6px; border: 1px solid var(--magpie-accent, #427061);
+    background: var(--magpie-accent, #427061); color: var(--magpie-bg, #fff);
+    font: inherit; cursor: pointer; white-space: nowrap; }
+  button:disabled { opacity: .55; cursor: default; }
+  button.toggle { background: transparent; color: var(--magpie-fg-2, #6b6f63);
+    border-color: var(--magpie-fg-6, #c9c7c0); font-size: 11px; padding: 2px 9px; }
+  .models { font-size: 11px; color: var(--magpie-fg-2, #6b6f63); margin-top: 6px;
+    font-family: ui-monospace, Consolas, monospace; word-break: break-all; }
+  .accts { margin-top: 10px; padding-left: 10px;
+    border-left: 2px solid var(--magpie-fg-6, #e4e2da); }
+  .acctnote { font-size: 11px; color: var(--magpie-fg-2, #6b6f63); margin-bottom: 6px; }
+  .acct { padding: 6px 0 4px; }
+  .acct + .acct { border-top: 1px dashed var(--magpie-fg-6, #e4e2da); }
+  .acct.off { opacity: .6; }
+  .accthead { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .acctname { font-size: 12px; font-family: ui-monospace, Consolas, monospace;
+    word-break: break-all; line-height: 1.4; }
+  .plan { font-size: 10px; color: var(--magpie-fg-2, #6b6f63); }
+  .follow { font-size: 10px; color: var(--magpie-fg-2, #6b6f63);
+    background: var(--magpie-fg-6, #e4e2da); padding: 0 5px; border-radius: 3px; }
+  .acct .editrow { margin-top: 4px; }
+  .err { color: #a4423c; font-size: 12px; margin-top: 6px; }
+  .err.ok { color: #427061; }
+  .empty { color: var(--magpie-fg-2, #6b6f63); padding: 12px 0; line-height: 1.7; }
+  h2 { font-size: 13px; margin: 18px 0 8px; color: var(--magpie-fg-2, #6b6f63); font-weight: 600; }
+  /* 预估列：只读输出，跟着输入框实时变，视觉上像一块数字牌 */
+  label.est { justify-content: flex-end; flex: 0 0 auto; }
+  output[data-f=est] { min-width: 104px; padding: 5px 10px; border-radius: 6px;
+    font-variant-numeric: tabular-nums; font-weight: 600; font-size: 13px;
+    background: rgba(66, 112, 97, .14); color: #427061; text-align: center;
+    white-space: nowrap; box-sizing: border-box; display: block; }
+  output[data-f=est].zero { background: var(--magpie-fg-6, #e4e2da);
+    color: var(--magpie-fg-2, #6b6f63); font-weight: 400; }
+  .switchrow { display: flex; flex-direction: column; gap: 4px; }
+  label.switch { flex-direction: row; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--magpie-fg, #2f2f2c); cursor: pointer; }
+  label.switch input { width: auto; }
+  .hint { font-size: 11px; color: var(--magpie-fg-2, #6b6f63); padding-left: 22px; }
+  /* 面板顶部的重要提示：enforce 没开、账号名单还没导出 */
+  .hintbox { padding: 8px 10px; border-radius: 6px; line-height: 1.7;
+    background: rgba(66, 112, 97, .1); border-left: 3px solid #427061; }
+  .hintbox.warn { background: rgba(164, 66, 60, .09); border-left-color: #a4423c; }
+  .hintbox .warn { color: #a4423c; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: 11px;
+    background: var(--magpie-fg-6, #e4e2da); padding: 1px 4px; border-radius: 3px; }
+  @media (max-width: 620px) {
+    .head { flex-direction: column; align-items: flex-start; gap: 3px; }
+    .grow { display: none; }
+  }
+</style>
+</head>
+<body>
+<p class="sub" id="sub">读取中…</p>
+<div id="usage"></div>
+<div id="list"></div>
+
+<h2>执行</h2>
+<div class="card">
+  <div class="switchrow">
+    <label class="switch">
+      <input type="checkbox" id="enforceOn">
+      <span>让额度真正生效（超了就停渠道 / 停账号）</span>
+    </label>
+    <span class="hint">关：只记账，不拦。开：每轮按额度停用超限的账号或下架渠道。</span>
+  </div>
+  <div class="err" id="enforceErr" hidden></div>
+  <div class="editrow">
+    <label>多久查一次（分钟，0 = 不自动查）
+      <input type="number" id="everyMin" min="0" max="1440" step="1" placeholder="5"></label>
+    <button class="save" id="saveEvery">保存</button>
+    <span class="hint" style="padding-left:0">默认 5 分钟。改完下一轮就按新间隔走，不用重启。</span>
+  </div>
+  <p class="sub" style="margin:8px 0 0">
+    <b>检查由插件自己跑</b>——这个插件装上就自带定时器，不需要开命令行、不需要计划任务。
+    日志在插件目录的 <code>credit-limit.log</code>。
+  </p>
+</div>
+
+<h2>多账号</h2>
+<div class="card">
+  <p class="sub" id="acctHint" hidden></p>
+  <div class="switchrow">
+    <label class="switch">
+      <input type="checkbox" id="splitOn">
+      <span>渠道额度按账号平摊（懒得逐个填时用）</span>
+    </label>
+    <span class="hint">开：上面填的额度 = 该渠道所有账号加起来的总数，每个账号分到 总额度 ÷ 账号数</span>
+  </div>
+  <div class="err" id="splitErr" hidden></div>
+  <p class="sub" style="margin:8px 0 0">
+    <b>想给某个账号单独设额度</b>，展开上面那张渠道卡里的「按账号设额度」，每个账号一行。
+    留空就跟渠道额度走。<br>
+    账号名单由插件自己从 magpie 的登录记录里导出（它读得到 <code>logins.json</code>，
+    面板读不到——面板连网络都碰不到，只能读 magpie 给的两个数据面和自己的 options）。
+  </p>
+</div>
+
+<h2>请求闸门</h2>
+<div class="card">
+  <div class="editrow" style="margin-top:0">
+    <label>单请求上限（估算 token，0 = 不限）
+      <input type="number" min="0" id="maxRequestTokens">
+    </label>
+    <label>多少字符算一个 token
+      <input type="number" min="1" max="10" id="estimate">
+    </label>
+    <label>额度让位线（%，策略用）
+      <input type="number" min="1" max="100" id="ceiling">
+    </label>
+    <button id="saveGate">保存</button>
+  </div>
+  <div class="err" id="gateErr" hidden></div>
+</div>
+
+<p class="sub" style="margin-top:14px">
+  额度写在 <code>dailyCredits</code>：渠道级键是 <code>渠道</code>，换算率是 <code>渠道:tpc</code>。<br>
+  积分是按换算率折出来的（magpie 的账本只记 token，不记积分），所以「1 积分 = N token」这一栏才是把 token 换算成分的桥梁，
+  右边的「预估能跑」就是 额度 × 换算率。<br>
+  换算率默认来自 LMR 账本近 30 天实测回归，没有实测来源的按 10000 折，建议按官方口径改。<br>
+  这一页负责<b>填数和看量</b>；超限之后要真的下架渠道/停用账号，把上面的<b>「真的执行」</b>开关打开——
+  检查由插件自己的定时器跑，不需要额外的看门狗进程（网关中间件拿不到磁盘，所以这件事只能由插件主入口做）。
+</p>
+</body>
+</html>
