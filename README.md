@@ -1,4 +1,4 @@
-# magpie-plugin-credit-limit
+# magpie-credit-limit
 
 给 [magpie](https://usemagpie.com) 的网关加**每日积分限额**：按渠道、甚至按账号设额度，用上游真实的积分消耗判定，超了就停用账号 / 下架渠道，第二天自动装回。外加两条「按预算排座」的路由策略和一道「发出去之前就拦住」的请求闸门。
 
@@ -28,10 +28,10 @@ magpie plugin add "<插件目录>"
 ```
 $ magpie plugin list
 <插件目录>  on
-  gateway middleware  onRequest · routings magpie-plugin-credit-limit/quota-first, magpie-plugin-credit-limit/token-spread
+  gateway middleware  onRequest · routings magpie-credit-limit/quota-first, magpie-credit-limit/token-spread
 ```
 
-> 也可以从 GitHub 直接装：`magpie plugin add github:R227BOUT/magpie-plugin-credit-limit`。
+> 也可以从 GitHub 直接装：`magpie plugin add github:R227BOUT/magpie-credit-limit`。
 
 ---
 
@@ -143,7 +143,7 @@ magpie 的账本（`usage.jsonl`）**只记 token 不记积分**，所以"今天
 
 > `maxRequestTokens` 只限制**单次**请求的大小，不累计。它的用处是"别让 agent 一次贴 20 万字的文件，一把烧掉一大截额度"。
 
-在 magpie 的 **设置 → 插件 → magpie-plugin-credit-limit → 「积分限额」面板**里改（不用碰 JSON，见下一节），改完下次请求就生效（网关每秒重读一次）。
+在 magpie 的 **设置 → 插件 → magpie-credit-limit → 「积分限额」面板**里改（不用碰 JSON，见下一节），改完下次请求就生效（网关每秒重读一次）。
 
 ---
 

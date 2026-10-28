@@ -169,11 +169,11 @@ export function onRequest(body, ctx) {
   const block = o.block && typeof o.block === "object" ? o.block : {}
 
   if (listed(model, block.models)) {
-    ctx.reject(403, `model "${model}" is blocked by magpie-plugin-credit-limit (block.models)`)
+    ctx.reject(403, `model "${model}" is blocked by magpie-credit-limit (block.models)`)
     return
   }
   if (listed(agent, block.agents)) {
-    ctx.reject(403, `agent "${agent}" is blocked by magpie-plugin-credit-limit (block.agents)`)
+    ctx.reject(403, `agent "${agent}" is blocked by magpie-credit-limit (block.agents)`)
     return
   }
 
@@ -185,7 +185,7 @@ export function onRequest(body, ctx) {
       const round = (n) => Math.round(n / 1000) * 1000 || Math.round(n)
       ctx.reject(
         413,
-        `this request carries about ${round(tokens)} tokens, past the ${round(limit)} magpie-plugin-credit-limit allows per request (maxRequestTokens); shorten it, or raise the limit in the plugin's options`,
+        `this request carries about ${round(tokens)} tokens, past the ${round(limit)} magpie-credit-limit allows per request (maxRequestTokens); shorten it, or raise the limit in the plugin's options`,
       )
       return
     }

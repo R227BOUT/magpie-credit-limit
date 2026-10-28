@@ -1,5 +1,5 @@
 {
-  "name": "magpie-plugin-credit-limit",
+  "name": "magpie-credit-limit",
   "version": "1.0.0",
   "description": "Daily credit limits for magpie's gateway: watch each provider/account's real credit spend (from magpie's own quota ledger), park a channel or disable one account when its daily allowance is used up, spend an allowance before its window renews, spread tokens across accounts, and refuse a request before it is paid for",
   "type": "module",
@@ -28,7 +28,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/R227BOUT/magpie-plugin-credit-limit.git"
+    "url": "git+https://github.com/R227BOUT/magpie-credit-limit.git"
   },
   "scripts": {
     "test": "node test/run.mjs && node test/panel.mjs && node test/credits-daily.mjs"

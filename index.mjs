@@ -38,7 +38,7 @@ function log(line) {
 
 // 一个进程只跑一个循环：magpie 重新加载插件时会再执行一次模块，若不防重
 // 会出现多个定时器同时改 logins.json，互相打架。
-const GUARD = Symbol.for("magpie-plugin-credit-limit.watchdog")
+const GUARD = Symbol.for("magpie-credit-limit.watchdog")
 const alreadyRunning = Boolean(globalThis[GUARD])
 if (!alreadyRunning) globalThis[GUARD] = { at: Date.now() }
 

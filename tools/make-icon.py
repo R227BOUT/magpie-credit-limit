@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""画 magpie-plugin-credit-limit 的图标：三条额度槽 + 一道闸门。
+"""画 magpie-credit-limit 的图标：三条额度槽 + 一道闸门。
 
 纯几何绘制，不用任何外部素材，也不用生成式模型。改配色改这里重跑即可：
 
